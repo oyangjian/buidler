@@ -2,7 +2,6 @@ import { EventEmitter } from "events";
 import { DeepPartial, DeepReadonly, Omit } from "ts-essentials";
 
 import { MessageTrace } from "./internal/buidler-evm/stack-traces/message-trace";
-import * as types from "./internal/core/params/argumentTypes";
 
 // Begin config types
 
@@ -22,7 +21,7 @@ export interface BuidlerNetworkAccount {
 }
 
 export interface BuidlerNetworkConfig extends CommonNetworkConfig {
-  accounts?: BuidlerNetworkAccount[];
+  accounts?: BuidlerNetworkAccount[] | BuidlerNetworkHDAccountsConfig;
   blockGasLimit?: number;
   hardfork?: string;
   throwOnTransactionFailures?: boolean;
@@ -32,11 +31,19 @@ export interface BuidlerNetworkConfig extends CommonNetworkConfig {
   initialDate?: string;
 }
 
+export interface ResolvedBuidlerNetworkConfig extends BuidlerNetworkConfig {
+  accounts: BuidlerNetworkAccount[];
+}
+
 export interface HDAccountsConfig {
   mnemonic: string;
   initialIndex?: number;
   count?: number;
   path?: string;
+}
+
+export interface BuidlerNetworkHDAccountsConfig extends HDAccountsConfig {
+  accountsBalance?: string;
 }
 
 export interface OtherAccountsConfig {
@@ -56,10 +63,24 @@ export interface HttpNetworkConfig extends CommonNetworkConfig {
   accounts?: NetworkConfigAccounts;
 }
 
+export interface ResolvedHttpNetworkConfig extends HttpNetworkConfig {
+  url: string;
+}
+
 export type NetworkConfig = BuidlerNetworkConfig | HttpNetworkConfig;
 
+export type ResolvedNetworkConfig =
+  | ResolvedBuidlerNetworkConfig
+  | ResolvedHttpNetworkConfig;
+
 export interface Networks {
+  buidlerevm: BuidlerNetworkConfig;
   [networkName: string]: NetworkConfig;
+}
+
+export interface ResolvedNetworks {
+  buidlerevm: ResolvedBuidlerNetworkConfig;
+  [networkName: string]: ResolvedNetworkConfig;
 }
 
 /**
@@ -109,7 +130,7 @@ export interface BuidlerConfig {
 export interface ResolvedBuidlerConfig extends BuidlerConfig {
   defaultNetwork: string;
   paths: ProjectPaths;
-  networks: Networks;
+  networks: ResolvedNetworks;
   solc: SolcConfig;
   analytics: AnalyticsConfig;
 }
@@ -374,7 +395,7 @@ export type IEthereumProvider = EthereumProvider;
 
 export interface Network {
   name: string;
-  config: NetworkConfig;
+  config: ResolvedNetworkConfig;
   provider: EthereumProvider;
 }
 
